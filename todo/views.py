@@ -1,40 +1,21 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
 from .models import Task
+from .forms import TaskForm
 
-@login_required(login_url='login')
-def home(request):
+def home(request):  # or task_list, depending on your function name
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    tasks = Task.objects.filter(user=request.user)
+    form = TaskForm()
+
     if request.method == 'POST':
-        task_title = request.POST.get('title')
-        if task_title:
-            Task.objects.create(user=request.user, title=task_title)
-            return redirect('home')
-
-    tasks = Task.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'todo/home.html', {'tasks': tasks})
-
-@login_required(login_url='login')
-def toggle_task(request, pk):
-    task = get_object_or_404(Task, pk=pk, user=request.user)
-    task.completed = not task.completed
-    task.save()
-    return redirect('home')
-
-@login_required(login_url='login')
-def delete_task(request, pk):
-    task = get_object_or_404(Task, pk=pk, user=request.user)
-    task.delete()
-    return redirect('home')
-
-def signup(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = TaskForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')
-    else:
-        form = UserCreationForm()
-    return render(request, 'todo/signup.html', {'form': form})
+            task = form.save(commit=False)
+            task.user = request.user
+            task.save()
+            return redirect('home')  # or your dashboard url name
+
+    context = {'tasks': tasks, 'form': form}
+    return render(request, 'todo/home.html', context)
