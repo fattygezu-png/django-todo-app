@@ -1,13 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Task
 from .forms import TaskForm
 
-def home(request):  # or task_list, depending on your function name
+def home(request):
     if not request.user.is_authenticated:
         return redirect('login')
 
     tasks = Task.objects.filter(user=request.user)
-    form = TaskForm()
 
     if request.method == 'POST':
         form = TaskForm(request.POST)
@@ -15,7 +14,23 @@ def home(request):  # or task_list, depending on your function name
             task = form.save(commit=False)
             task.user = request.user
             task.save()
-            return redirect('home')  # or your dashboard url name
+            return redirect('home')
+    else:
+        form = TaskForm()
 
-    context = {'tasks': tasks, 'form': form}
+    context = {
+        'tasks': tasks,
+        'form': form,
+    }
     return render(request, 'todo/home.html', context)
+
+def toggle_task(request, pk):
+    task = get_object_or_404(Task, pk=pk, user=request.user)
+    task.completed = not task.completed
+    task.save()
+    return redirect('home')
+
+def delete_task(request, pk):
+    task = get_object_or_404(Task, pk=pk, user=request.user)
+    task.delete()
+    return redirect('home')
