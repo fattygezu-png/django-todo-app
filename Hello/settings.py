@@ -27,8 +27,12 @@ SECRET_KEY = 'django-insecure-f^!5m1m5aa6jc4f2q9pmtxfwgxgcx-ep3^8qlvb(kz3$52qecs
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']  # or your specific domain list
 
+# Add this line to trust your Render deployment URL:
+CSRF_TRUSTED_ORIGINS = [
+    'https://django-todo-app-idvf.onrender.com',
+]
 
 # Application definition
 
