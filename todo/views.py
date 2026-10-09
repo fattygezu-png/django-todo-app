@@ -5,8 +5,9 @@ from django.contrib.auth.decorators import login_required
 from .models import Task
 from .forms import TaskForm
 
-@login_required
+@login_required(login_url='login')
 def home(request):
+    # rest of your code stays the same
     tasks = Task.objects.filter(user=request.user)
 
     if request.method == 'POST':
